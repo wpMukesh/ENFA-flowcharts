@@ -1,0 +1,72 @@
+flowchart TD
+    Start([User Accesses NFA System]) --> Dashboard[Dashboard View<br/>- My Requests<br/>- My Approvals<br/>- My Clarifications]
+    
+    Dashboard --> UserAction{User Role<br/>on This NFA?}
+    
+    UserAction -->|Requestor/Creator| RequestorPerms[Requestor Permissions]
+    UserAction -->|Approver| ApproverPerms[Approver Permissions]
+    UserAction -->|Clarifier| ClarifierPerms[Clarifier Permissions]
+    UserAction -->|Viewer| ViewerPerms[Viewer Permissions]
+    
+    RequestorPerms --> ReqActions[Can Perform:]
+    ReqActions --> ReqCreate[✓ Create NFA Request<br/>Select Template<br/>Fill Details]
+    ReqCreate --> ReqSaveDraft[✓ Save as Draft<br/>Status: DRAFT]
+    ReqSaveDraft --> ReqAddApprovers[✓ Add/Order Approvers]
+    ReqAddApprovers --> ReqSendApproval[✓ Send for Approval<br/>Status: ACTIVE]
+    
+    ReqSendApproval --> ReqWhileActive{While Status<br/>ACTIVE?}
+    ReqWhileActive --> ReqEdit[✓ Edit NFA Details<br/>Track in nfa_details_edit]
+    ReqEdit --> ReqAddClarifier[✓ Add Clarifiers<br/>Create Clarification]
+    ReqAddClarifier --> ReqCreatePost[✓ Create Posts<br/>in Clarification Thread]
+    ReqCreatePost --> ReqView[✓ View All Timeline<br/>See All Approvals/Posts]
+    ReqView --> ReqExport[✓ Export to PDF]
+    
+    ReqWhileActive -->|If REJECTED| ReqReopen[✓ Reopen Request<br/>Check 1 month rule]
+    ReqWhileActive -->|If APPROVED| ReqReadOnly[✗ Cannot Edit<br/>Read-Only Archive View]
+    
+    ApproverPerms --> AppActions[Can Perform:]
+    AppActions --> AppView[✓ View NFA Details<br/>Once Added to Members]
+    AppView --> AppWaitTurn{Is It<br/>Their Turn?}
+    
+    AppWaitTurn -->|No - Previous Not Approved| AppViewOnly[✓ View Only<br/>✗ Cannot Act Yet<br/>✗ No Notification]
+    AppWaitTurn -->|Yes - Their Turn| AppNotified[✓ Receive Notification]
+    
+    AppNotified --> AppReview[✓ Review NFA Details]
+    AppReview --> AppApprove[✓ Approve<br/>Record timestamp<br/>Move to Next Approver]
+    AppReview --> AppReject[✓ Reject<br/>Status: REJECTED<br/>End Process]
+    AppReview --> AppAddClarifier[✓ Add Clarifiers<br/>Create Clarification Request]
+    AppReview --> AppAddApprover[✓ Add More Approvers to the end only<br/>Tracked in history]
+    %% AppReview --> AppEditDetails[✓ Edit NFA Details<br/>Track in nfa_details_edit]
+    AppReview --> AppCreatePost[✓ Create Posts<br/>in Clarification Thread]
+    AppReview --> AppExport[✓ Export to PDF]
+    
+    ClarifierPerms --> ClarActions[Can Perform:]
+    ClarActions --> ClarView[✓ View NFA Details]
+    ClarView --> ClarNotified[✓ Receive Notification<br/>When Added]
+    ClarNotified --> ClarPost[✓ Create Posts<br/>Answer Questions]
+    ClarPost --> 
+    %% ClarMention[✓ @mention Others]    ClarMention --> 
+    ClarViewThread[✓ View Clarification Thread]
+    ClarViewThread --> ClarViewTimeline[✓ View Timeline<br/>Cannot Edit NFA Details<br/>Cannot Approve/Reject]
+    
+    ViewerPerms --> ViewActions[Can Perform:]
+    ViewActions --> ViewNFA[✓ View NFA Details]
+    ViewNFA --> ViewTimeline[✓ View Timeline<br/>See All Activity]
+    ViewTimeline --> ViewPosts[✓ View Posts/Clarifications]
+    ViewPosts --> ViewExport[✓ Export to PDF]
+    ViewExport --> ViewRestrict[✗ Cannot Create Posts<br/>✗ Cannot Edit Details<br/>✗ Cannot Add Members<br/>✗ Cannot Approve/Reject<br/>Read-Only Access]
+    
+    AllRoles[All Roles Can:]
+    AllRoles --> Filter[✓ Filter Views<br/>By Status/Approver/Date]
+    Filter --> Search[✓ Search NFAs<br/>Export Sheet of Lists]
+    
+    note1[Note: Member types stored<br/> as APPROVER, CLARIFIER, VIEWER, NOBODY]
+    
+    note2[Note: Edit tracking happens<br/>automatically in background<br/>for audit trail]
+    
+    style ReqCreate fill:#90EE90
+    style AppApprove fill:#90EE90
+    style AppReject fill:#FFB6C6
+    style ViewRestrict fill:#D3D3D3
+    style ReqReadOnly fill:#D3D3D3
+    style AppViewOnly fill:#FFD700

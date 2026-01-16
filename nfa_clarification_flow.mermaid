@@ -1,0 +1,55 @@
+flowchart TD
+    Start([During Approval Process]) --> NeedsClarification{Approver <br/>Needs Clarification?}
+    
+    NeedsClarification -->|Yes| WhoAdds{Who Adds<br/>Clarifier?}
+    
+    WhoAdds -->|Approver| ApproverAdds[Approver Creates<br/>Clarification Request]
+    
+    ApproverAdds --> CreateClarification[Create nfa_clarification<br/>with Title & RequestedBy]
+    
+    CreateClarification --> AddClarifiers[Add Clarifiers<br/>Create Clarifier records/history]
+    AddClarifiers --> CreatePost[Create Initial Post<br/>in timeline<br/>Which is Question with @mentions/clarifier]
+    
+    CreatePost --> NotifyClarifiers[Notify All Clarifiers<br/>about Request]
+    NotifyClarifiers --> Timeline[Add to Timeline<br/>Clarifier Added at DateTime]
+    
+    Timeline --> WaitResponse{Clarifiers<br/>Respond?}
+    
+    WaitResponse --> |Yes| ClarifierPost[Clarifier Creates Post<br/>with response]
+    ClarifierPost -->  ThreadPost[(Post Saved<br/>postedById, clarificationId)]
+    
+    ThreadPost --> MorePosts{More<br/>Discussion?}
+    MorePosts -->|Yes| AnyonePost[Approvers/Requestor/Clarifiers<br/>Create Posts in Thread]
+    AnyonePost --> ThreadPost
+    
+    MorePosts -->|No| NoMarking[No Specific Post Marked<br/>as Answer<br/>Thread Just Exists]
+    
+    WaitResponse -->|No/Delayed| ApproverDecision{Approver Decides}
+    
+    ApproverDecision -->|Wait for Clarification| WaitResponse
+    ApproverDecision -->|Proceed Anyway| ProceedWithoutAnswer[Approver Can Still<br/>Approve/Reject NFA<br/>Without Clarification]
+    
+    NoMarking --> ParallelProcess[Clarification Discussion<br/>Runs in PARALLEL<br/>with Approval Process]
+    ProceedWithoutAnswer --> ParallelProcess
+    
+    ParallelProcess --> CheckProcess{Is Approval<br/>Still Active?}
+    
+    CheckProcess -->|Yes - ACTIVE| ContinueDiscussion[Discussion Can Continue<br/>Posts Keep Adding]
+    CheckProcess -->|No - APPROVED| LockDiscussion[NFA Archived<br/>No More Posts/Changes<br/>Read-Only View]
+    CheckProcess -->|No - REJECTED| AllowDiscussion[Can Still Discuss<br/>if Reopen is Planned]
+    
+    ContinueDiscussion --> ViewTimeline[All Activity Visible<br/>in Timeline View<br/>with DateTimes]
+    AllowDiscussion --> ViewTimeline
+    LockDiscussion --> ViewTimeline
+    
+    ViewTimeline --> End([Clarification Complete])
+    
+    note1[Note: Clarifications do NOT<br/>pause approval process<br/>Approvers can proceed<br/>without waiting for answers]
+    
+    note2[Note: No specific post is<br/>marked as the answer<br/>All posts exist in thread<br/>for context]
+    
+    style CreateClarification fill:#FFD700
+    style ThreadPost fill:#ADD8E6
+    style ParallelProcess fill:#FFB6C6
+    style LockDiscussion fill:#D3D3D3
+    style NoMarking fill:#FFA500

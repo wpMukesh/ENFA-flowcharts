@@ -1,0 +1,65 @@
+flowchart TD
+    Start([NFA Sent for Approval<br/>Status: ACTIVE]) --> InitApprovers[Approvers Added as Members<br/>All can VIEW<br/>Only Current can Approve]
+    
+    InitApprovers --> Approver1{Approver 1<br/>Reviews NFA}
+    
+    Approver1 -->|Needs Info| AddClarifier1[Can Add Clarifier]
+    AddClarifier1 -.-> ClarificationFlow1[See Clarification Flow]
+    ClarificationFlow1 -.-> Approver1
+    
+    Approver1 -->|Needs More Approvers| AddApprover1[Can Add New Approver<br/>to Sequence]
+    AddApprover1 --> UpdateOrder1[(Update Approver List<br/>Tracked edit history)]
+    UpdateOrder1 --> Approver1
+    
+    Approver1 -->|Approve| RecordApproval1[(Record Approval<br/>Timestamp)]
+    Approver1 -->|Reject| RecordRejection1[Record Rejection<br/>Status: REJECTED]
+    RecordRejection1 --> End1([Process Ends])
+    
+    RecordApproval1 --> NotifyNext2[Notify Approver 2]
+    NotifyNext2 --> Approver2{Approver 2<br/>Reviews NFA}
+    
+    Approver2 -->|Needs Info| AddClarifier2[Can Add Clarifier]
+    AddClarifier2 -.-> ClarificationFlow2[See Clarification Flow]
+    ClarificationFlow2 -.-> Approver2
+    
+    Approver2 -->|Needs More Approvers| AddApprover2[Can Add New Approver<br/>to Sequence]
+    AddApprover2 --> UpdateOrder2[(Update Approver List<br/>Tracked edit history)]
+    UpdateOrder2 --> Approver2
+    
+    Approver2 -->|Approve| RecordApproval2[(Record Approval<br/>Timestamp)]
+    Approver2 -->|Reject| RecordRejection2[Record Rejection<br/>Status: REJECTED]
+    RecordRejection2 --> End2([Process Ends])
+    
+    RecordApproval2 --> CheckMore{More<br/>Approvers?}
+    
+    CheckMore -->|Yes| NotifyNext[Notify Next Approver<br/>Order n+1]
+    NotifyNext --> ApproverN{Approver N<br/>Reviews NFA}
+    
+    ApproverN -->|Approve| RecordApprovalN[(Record Approval)]
+    ApproverN -->|Reject| RecordRejectionN[Status: REJECTED]
+    RecordRejectionN --> EndN([Process Ends])
+    ApproverN -->|Add Clarifier| ClarificationFlowN[Clarification Process]
+    ClarificationFlowN -.-> ApproverN
+    ApproverN -->|Add Approver| UpdateOrderN[(Update Sequence)]
+    UpdateOrderN --> ApproverN
+    
+    RecordApprovalN --> CheckMore
+    
+    CheckMore -->|No| FinalApproval[All Approvers Completed<br/>Status: APPROVED]
+    FinalApproval --> Archive[Archive NFA<br/>No Further Edits Allowed]
+    Archive --> EndSuccess([NFA Approved])
+    
+    note1[Note: Approvers can see NFA<br/>once added to members<br/>but can only approve when<br/>their turn arrives]
+    note2[Note: During approval process<br/>edits to NFA details are<br/>tracked as history]
+    
+    style RecordApproval1 fill:#90EE90
+    style RecordApproval2 fill:#90EE90
+    style RecordApprovalN fill:#90EE90
+    style FinalApproval fill:#90EE90
+    style RecordRejection1 fill:#FFB6C6
+    style RecordRejection2 fill:#FFB6C6
+    style RecordRejectionN fill:#FFB6C6
+    style UpdateOrder1 fill:#E6E6FA
+    style UpdateOrder2 fill:#E6E6FA
+    style UpdateOrderN fill:#E6E6FA
+

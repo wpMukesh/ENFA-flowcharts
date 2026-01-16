@@ -1,0 +1,40 @@
+flowchart TD
+    Start([User Creates NFA Request]) --> SelectTemplate[Select Template Type]
+    SelectTemplate --> FillDetails[Fill NFA Details<br/>- Title<br/>- Preamble Details<br/>- Technical/Functional Details<br/>- Business Justification<br/>- Proposal Details]
+    FillDetails --> AddApprovers[Add Ordered Approvers<br/>Sequential: 1, 2, 3, 4...]
+    AddApprovers --> ChoiceAction{User Action?}
+    
+    ChoiceAction -->|Save Draft| SaveDraft[(Save to DB<br/>Status: DRAFT)]
+    SaveDraft --> DraftSaved([Draft Saved])
+    
+    ChoiceAction -->|Send for Approval| ValidateApprovers{Has Approvers?}
+    ValidateApprovers -->|No| Error1[Error: Add Approvers]
+    Error1 --> AddApprovers
+    ValidateApprovers -->|Yes| CreateNFA[Create NFA Record<br/>Status: ACTIVE]
+    
+    CreateNFA --> AddMembers[Add Members:<br/>- Approvers<br/>- Viewers optional]
+    AddMembers --> NotifyFirst[Notify First Approver<br/>Order = 1]
+    NotifyFirst --> WaitApproval{Approval Process}
+    
+    WaitApproval -->|All Approved| MarkApproved[Status: APPROVED<br/>Archive - No Edits Allowed]
+    MarkApproved --> End1([NFA Completed])
+    
+    WaitApproval -->|Any Rejected| CheckRejection[Status: REJECTED<br/>Record timestamp]
+    CheckRejection --> RejectedEnd([NFA Rejected])
+    
+    RejectedEnd -.->|Reopen Request| CheckTime{Time Since<br/>Rejection?}
+    CheckTime -->|< 1 Month| RestoreApprovals[Keep Existing Approvals<br/>Status: ACTIVE]
+    CheckTime -->|≥ 1 Month| ResetApprovals[Clear All Approvals<br/>Restart from Beginning<br/>Status: ACTIVE]
+    RestoreApprovals --> NotifyNext[Notify Next Pending Approver]
+    ResetApprovals --> NotifyFirst
+    NotifyNext --> WaitApproval
+    
+    WaitApproval -.->|During Process| AllowEdits[Only Requestor<br/>Can Edit Details]
+    AllowEdits -.->|Track Changes| SaveHistory[(Save to<br/>nfa_details_edit<br/>note_for_approval_edit)]
+    SaveHistory --> WaitApproval
+    
+    style CreateNFA fill:#90EE90
+    style MarkApproved fill:#90EE90
+    style CheckRejection fill:#FFB6C6
+    style SaveDraft fill:#FFD700
+    style SaveHistory fill:#E6E6FA
